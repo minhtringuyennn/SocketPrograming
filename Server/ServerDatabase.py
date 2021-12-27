@@ -2,6 +2,7 @@
 from sqlite3 import Error
 import requests 
 import time
+from datetime import date, datetime
 import threading
 from unidecode import unidecode
 
@@ -109,21 +110,22 @@ class Db():
             
         # Pass data from json to self.data
         self.data = api.json();
-        print(type(self.data))
 
         # Filter unnecessary information
         tmp = []
-        for value in self.data['golds'][0]['value']:
-            tmp2 = {}
-            if value['type'] in goldType:
-                tmp2.update({'type' : value['type']})
-                tmp2.update({'brand': value['brand']})
-                tmp2.update({'buy'  : "{:,.0f} VNĐ".format(float(value['buy'][:-3].replace(",", "")) * 1000)})
-                tmp2.update({'sell' : "{:,.0f} VNĐ".format(float(value['sell'][:-3].replace(",", "")) * 1000)})
-                tmp2.update({'update': value['updated']})
-                tmp2.update({'day'  : value['day']})
-                tmp.append(tmp2)
-
+        try:
+            for value in self.data['golds'][0]['value']:
+                tmp2 = {}
+                if value['type'] in goldType:
+                    tmp2.update({'type' : value['type']})
+                    tmp2.update({'brand': value['brand']})
+                    tmp2.update({'buy'  : "{:,.0f} VNĐ".format(float(value['buy'][:-3].replace(",", "")) * 1000)})
+                    tmp2.update({'sell' : "{:,.0f} VNĐ".format(float(value['sell'][:-3].replace(",", "")) * 1000)})
+                    tmp2.update({'update': value['updated']})
+                    tmp2.update({'day'  : value['day']})
+                    tmp.append(tmp2)
+        except:
+            tmp ={}
         self.data = tmp
 
     def refreshDB(self, date = "NOW"):
@@ -165,22 +167,31 @@ class Db():
             # Otherwise...
             return {'avai' : False, 'success': False}
         
-    def GetTotal(self, date):
-        # Return all data from API
-        if date == "NOW" or self.data[0]["day"] == date:
+    def GetTotal(self, getDate):
+        todayDate = str(date.today()).replace("-", "")
+
+        if todayDate < getDate:
+            return {}
+
+        if getDate == "NOW" or self.data[0]["day"] == getDate:
             pass
         else:
-            print(f"refresh total database {date} {self.data[0]['update']}")
-            self.updateJson(date)
+            print(f"refresh total database {getDate} {self.data[0]['update']}")
+            self.updateJson(getDate)
 
         return self.data
 
-    def GetType(self, search, date):
-        if date == "NOW" or self.data[0]["day"] == date:
+    def GetType(self, search, getDate):
+        todayDate = str(date.today()).replace("-", "")
+
+        if todayDate < getDate:
+            return {}
+
+        if getDate == "NOW" or self.data[0]["day"] == getDate:
             pass
         else:
-            print(f"refresh database {date} {self.data[0]['update']}")
-            self.updateJson(date)
+            print(f"refresh database {getDate} {self.data[0]['update']}")
+            self.updateJson(getDate)
 
         # Return matching type from API
         Res = []

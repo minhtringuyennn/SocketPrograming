@@ -15,10 +15,6 @@ class ClientSide():
 
     # Create network connection
     def create_connection(self, IP):
-        # If Connected -> close connection
-        if (self.Connected):
-            self.close_connection()
-        
         # Get HOST and PORT
         self.HOST = IP
         PORT = self.PORT
@@ -74,9 +70,13 @@ class ClientSide():
                     size = 0
 
             # Import data
-            self.Data = json.loads(data)
+            try:
+                self.Data = json.loads(data)
+            except:
+                self.Data = []
 
         # Handle unexpected error
-        except:
+        except socket.error:
+            self.Connected = False
             self.Data = []
             pass

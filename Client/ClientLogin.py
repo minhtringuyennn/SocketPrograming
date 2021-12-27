@@ -16,6 +16,7 @@ class LoginUi(QtWidgets.QDialog):
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         
         self.net = Net
+        self.isLogin = False
         self.LoadFunction()
 
     # Connect UI Button
@@ -44,6 +45,8 @@ class LoginUi(QtWidgets.QDialog):
             login = self.net.Data
             
             if (login == []): return
+            
+            self.isLogin = login["valid_users"]
             
             # If server dont recognize user
             if (not login["valid_users"]):

@@ -32,8 +32,7 @@ class ClientUI(QtWidgets.QDialog):
         self.net = ClientSide()
         self.LoginWidget = LoginUi(self.net)
         self.RegWidget = RegUi(self.net)
-
-        self.count = 0
+        
         self.ChangeIP = False
         self.net.Connected = False
 
@@ -44,8 +43,8 @@ class ClientUI(QtWidgets.QDialog):
         self.ui.Login.clicked.connect(self.showLogin)
         self.ui.Register.clicked.connect(self.showRegister)
         self.ui.Connect.clicked.connect(self.getconnect)
+        self.ui.Disconnect.clicked.connect(self.disconnect)
         self.ui.Search.clicked.connect(self.QueryType)
-
         now = str(date.today()).split("-")
         self.ui.GetDate.setDateTime(QtCore.QDateTime(QtCore.QDate(int(now[0]), int(now[1]), int(now[2])), QtCore.QTime(0, 0, 0)))
     
@@ -67,6 +66,10 @@ class ClientUI(QtWidgets.QDialog):
         else:
             self.ChangeState(-1)
 
+    def disconnect(self):
+        self.net.close_connection();
+        self.ChangeState(-1)
+
     # Show status
     def ChangeState(self, netstate = 0):
         # Connecting
@@ -76,10 +79,14 @@ class ClientUI(QtWidgets.QDialog):
         # Connected
         if (netstate==1):
             self.ui.Netstate.setText(str("Connected to " + str(self.net.HOST) + ":" + str(self.net.PORT)))
+            self.ui.Connect.setEnabled(False)
+            self.ui.Disconnect.setEnabled(True)
             return
         # Server not found
         if (netstate==-1):
             self.ui.Netstate.setText("Connect to " + str(self.net.HOST) + " Error! Server is unavailable!")
+            self.ui.Connect.setEnabled(True)
+            self.ui.Disconnect.setEnabled(False)
             return
 
     # Show Login Dialog
@@ -92,27 +99,35 @@ class ClientUI(QtWidgets.QDialog):
     
     def UpdateTable(self):
         # print(self.net.Data)
-        
-        row = len(self.net.Data) - 1
-        self.ui.DataTable.setRowCount(row + 1)
+        if self.net.Data == {}:
+            QtWidgets.QMessageBox.about(None, "Error", "Không có dữ liệu!")
+            if self.net.Connected == False:
+                self.ChangeState(-1)
+        else:
+            row = len(self.net.Data) - 1
+            self.ui.DataTable.setRowCount(row + 1)
 
-        row = 0
-        for data in self.net.Data:
-            # print(data)
-            item = QtWidgets.QTableWidgetItem(str(data['type']))
-            self.ui.DataTable.setItem(row, 0, item)
-            item = QtWidgets.QTableWidgetItem(str(data['brand']))
-            self.ui.DataTable.setItem(row, 1, item)
-            item = QtWidgets.QTableWidgetItem(str(data['buy']))
-            self.ui.DataTable.setItem(row, 2, item)
-            item = QtWidgets.QTableWidgetItem(str(data['sell']))
-            self.ui.DataTable.setItem(row, 3, item)
-            item = QtWidgets.QTableWidgetItem(str(data['update']))
-            self.ui.DataTable.setItem(row, 4, item)
-            row += 1
-            #column += 1
+            row = 0
+            for data in self.net.Data:
+                # print(data)
+                item = QtWidgets.QTableWidgetItem(str(data['type']))
+                self.ui.DataTable.setItem(row, 0, item)
+                item = QtWidgets.QTableWidgetItem(str(data['brand']))
+                self.ui.DataTable.setItem(row, 1, item)
+                item = QtWidgets.QTableWidgetItem(str(data['buy']))
+                self.ui.DataTable.setItem(row, 2, item)
+                item = QtWidgets.QTableWidgetItem(str(data['sell']))
+                self.ui.DataTable.setItem(row, 3, item)
+                item = QtWidgets.QTableWidgetItem(str(data['update']))
+                self.ui.DataTable.setItem(row, 4, item)
+                row += 1
+                #column += 1
 
     def QueryType(self):
+        if self.net.Connected and not self.LoginWidget.isLogin:
+            QtWidgets.QMessageBox.about(None, "Error", "Người dùng chưa đăng nhập!")
+            return
+
         date = "NOW"
         type = self.ui.SearchType.text()
         date = str(self.ui.GetDate.date().toPyDate()).replace("-", "")
@@ -138,6 +153,8 @@ class ClientUI(QtWidgets.QDialog):
             self.UpdateTable()
         else:
             QtWidgets.QMessageBox.about(None, "Error", "Không có dữ liệu!")
+            if self.net.Connected == False:
+                self.ChangeState(-1)
 
     # Close UI
     def CloseUI(self):
