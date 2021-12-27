@@ -86,6 +86,14 @@ class Ui_GoldPriceCilent(object):
         self.DataTable.setHorizontalHeaderItem(3, item)
         item = QtWidgets.QTableWidgetItem()
         self.DataTable.setHorizontalHeaderItem(4, item)
+
+        header = self.DataTable.horizontalHeader()       
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)
+
         self.DataTable.horizontalHeader().setVisible(True)
         self.DataTable.horizontalHeader().setCascadingSectionResizes(False)
         self.DataTable.horizontalHeader().setHighlightSections(True)

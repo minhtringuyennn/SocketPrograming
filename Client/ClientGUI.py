@@ -43,7 +43,7 @@ class ClientUI(QtWidgets.QDialog):
         self.ui.Login.clicked.connect(self.showLogin)
         self.ui.Register.clicked.connect(self.showRegister)
         self.ui.Connect.clicked.connect(self.getconnect)
-        self.ui.Search.clicked.connect(self.QueryTotal)
+        self.ui.Search.clicked.connect(self.QueryType)
     
     # Connect
     def getconnect(self):
@@ -108,10 +108,25 @@ class ClientUI(QtWidgets.QDialog):
             row += 1
             #column += 1
 
-    def QueryTotal(self):
-        query = {
-            "event" : "GetTotal"
-        }
+    def QueryType(self):
+        try:
+            type = self.ui.SearchType.text()
+            
+            if type == "":
+                query = {
+                    "event" : "GetTotal"
+                }
+            else:
+                query = {
+                    "event" : "GetType",
+                    "type"  : type
+                }
+        except:
+            query = {
+                "event" : "GetTotal"
+            }
+
+        
         self.net.send_query(query)
         if (self.net.Data != []):
             self.UpdateTable()

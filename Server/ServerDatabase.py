@@ -4,8 +4,6 @@ import requests
 import time
 import json 
 import threading
-import dataclasses
-from dataclasses import dataclass
 
 # Common gold type
 goldType = {
@@ -124,8 +122,8 @@ class Db():
                 if value['type'] in goldType:
                     tmp2.update({'type': value['type']})
                     tmp2.update({'brand': value['brand']})
-                    tmp2.update({'buy': value['buy']})
-                    tmp2.update({'sell': value['sell']})
+                    tmp2.update({'buy': int(value['buy'][:-3].replace(",", ""))})
+                    tmp2.update({'sell': int(value['sell'][:-3].replace(",", ""))})
                     tmp2.update({'update': value['updated']})
                     tmp.append(tmp2)
 
@@ -168,4 +166,15 @@ class Db():
     def GetTotal(self):
         # Return all data from API
         Res = self.data
+        return Res
+
+    def GetType(self, search):
+
+        # Return matching type from API
+        Res = []
+        for value in self.data:
+            if search in value['type']:
+                Res.append(value)
+
+        print(value)
         return Res

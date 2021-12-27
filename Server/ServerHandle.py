@@ -69,7 +69,7 @@ class ServerSide(QtWidgets.QDialog):
                         size = 0
 
                 # Print log
-                self.printlogs(str(addr[0]) + ":" + str(addr[1]) + " Request: " + data)
+                # self.printlogs(str(addr[0]) + ":" + str(addr[1]) + " Request: " + data)
                 request = json.loads(data)
 
                 # If client request to close or close unexpected
@@ -79,18 +79,18 @@ class ServerSide(QtWidgets.QDialog):
 
                 # Send back the reponse to client
                 response = json.dumps(self.process_request(request), separators=(',', ':'))
-                await loop.sock_sendall(client, len(response.encode('utf8')).to_bytes(4, 'big'))
-                self.printlogs(str(addr[0]) + ":" + str(addr[1]) + " Response: " + response)
-                await loop.sock_sendall(client, response.encode('utf8'))
+                await loop.sock_sendall(client, len(response.encode('utf-8')).to_bytes(4, 'big'))
+                await loop.sock_sendall(client, response.encode('utf-8'))
+                # self.printlogs(str(addr[0]) + ":" + str(addr[1]) + " Response: " + response)
 
             # Notify when client close unxpected
             except socket.error as msg:
-                self.printlogs(str("Client " + str(addr[0]) + ":" + str(addr[1]) + " Connection Unexpected Close."))
+                # self.printlogs(f("Client {str(addr[0])}: {str(addr[1])} Connection Unexpected Close."))
                 break
 
             # If connection time-out
             except asyncio.TimeoutError as te:
-                self.printlogs(str("Client " + str(addr[0]) + ":" + str(addr[1]) + " Connection Timeout."))
+                # self.printlogs(f("Client {str(addr[0])}: {str(addr[1])} Connection Timeout."))
                 break
 
             # Notify client when server can't handle request
@@ -115,6 +115,10 @@ class ServerSide(QtWidgets.QDialog):
         # Handle user register
         if (request["event"] == "register"):
             return self.Data.Register(request["username"], request["password"])
+
+        # Handle user get gold type
+        if (request["event"] == "GetType"):
+            return self.Data.GetType(request["type"])
 
         # Return None
         return {}
