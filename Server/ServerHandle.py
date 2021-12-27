@@ -1,5 +1,6 @@
 import asyncio, socket
 from PyQt5 import QtWidgets, QtCore
+import requests
 from ServerDatabase import Db
 import json
 import threading
@@ -55,7 +56,7 @@ class ServerSide(QtWidgets.QDialog):
         while True:
             try:
                 # Waiting for connection
-                request = await asyncio.wait_for((loop.sock_recv(client,4)), timeout=300)
+                request = await asyncio.wait_for((loop.sock_recv(client, 4)), timeout=6000)
                 size = int.from_bytes(request, "big")
                 data = ""
 
@@ -106,7 +107,7 @@ class ServerSide(QtWidgets.QDialog):
     def process_request(self, request):
         # Get database
         if (request["event"] == "GetTotal"):
-            return self.Data.GetTotal()
+            return self.Data.GetTotal(request["date"])
 
         # Handle user login
         if (request["event"] == "login"):
@@ -118,7 +119,7 @@ class ServerSide(QtWidgets.QDialog):
 
         # Handle user get gold type
         if (request["event"] == "GetType"):
-            return self.Data.GetType(request["type"])
+            return self.Data.GetType(request["type"], request["date"])
 
         # Return None
         return {}

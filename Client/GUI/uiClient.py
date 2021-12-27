@@ -92,7 +92,7 @@ class Ui_GoldPriceCilent(object):
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
 
         self.DataTable.horizontalHeader().setVisible(True)
         self.DataTable.horizontalHeader().setCascadingSectionResizes(False)

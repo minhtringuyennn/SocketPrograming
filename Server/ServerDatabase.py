@@ -2,8 +2,8 @@
 from sqlite3 import Error
 import requests 
 import time
-import json 
 import threading
+from unidecode import unidecode
 
 # Common gold type
 goldType = {
@@ -100,34 +100,36 @@ class Db():
                 print("Query SQL Error!")
                 raise e;
     
-    
+    def updateJson(self, date):
+        api = requests.get(f"https://tygia.com/json.php?gold=1&date={date}")
+            
+        # Fix BOM Header
+        if api.text[0] == u'\ufeff':
+            api.encoding = 'utf-8-sig'
+            
+        # Pass data from json to self.data
+        self.data = api.json();
+        print(type(self.data))
+
+        # Filter unnecessary information
+        tmp = []
+        for value in self.data['golds'][0]['value']:
+            tmp2 = {}
+            if value['type'] in goldType:
+                tmp2.update({'type' : value['type']})
+                tmp2.update({'brand': value['brand']})
+                tmp2.update({'buy'  : "{:,.0f} VNĐ".format(float(value['buy'][:-3].replace(",", "")) * 1000)})
+                tmp2.update({'sell' : "{:,.0f} VNĐ".format(float(value['sell'][:-3].replace(",", "")) * 1000)})
+                tmp2.update({'update': value['updated']})
+                tmp2.update({'day'  : value['day']})
+                tmp.append(tmp2)
+
+        self.data = tmp
 
     def refreshDB(self, date = "NOW"):
         # Request API every 3600s
         while True:
-            api = requests.get(f"https://tygia.com/json.php?gold=1&date={date}")
-            
-            # Fix BOM Header
-            if api.text[0] == u'\ufeff':
-                api.encoding = 'utf-8-sig'
-            
-            # Pass data from json to self.data
-            self.data = api.json();
-            print(type(self.data))
-
-            # Filter unnecessary information
-            tmp = []
-            for value in self.data['golds'][0]['value']:
-                tmp2 = {}
-                if value['type'] in goldType:
-                    tmp2.update({'type': value['type']})
-                    tmp2.update({'brand': value['brand']})
-                    tmp2.update({'buy': int(value['buy'][:-3].replace(",", ""))})
-                    tmp2.update({'sell': int(value['sell'][:-3].replace(",", ""))})
-                    tmp2.update({'update': value['updated']})
-                    tmp.append(tmp2)
-
-            self.data = tmp
+            self.updateJson(date)
             # Sleep
             time.sleep(3600)
 
@@ -162,19 +164,32 @@ class Db():
         except Exception as msg:
             # Otherwise...
             return {'avai' : False, 'success': False}
-    
-    def GetTotal(self):
+        
+    def GetTotal(self, date):
         # Return all data from API
-        Res = self.data
-        return Res
+        if date == "NOW" or self.data[0]["day"] == date:
+            pass
+        else:
+            print(f"refresh total database {date} {self.data[0]['update']}")
+            self.updateJson(date)
 
-    def GetType(self, search):
+        return self.data
+
+    def GetType(self, search, date):
+        if date == "NOW" or self.data[0]["day"] == date:
+            pass
+        else:
+            print(f"refresh database {date} {self.data[0]['update']}")
+            self.updateJson(date)
 
         # Return matching type from API
         Res = []
         for value in self.data:
-            if search in value['type']:
+            tmp1 = unidecode(search.lower())
+            tmp2 = unidecode(value['type'].lower())
+
+            if tmp1 in tmp2:
                 Res.append(value)
 
-        print(value)
+        # print(value)
         return Res

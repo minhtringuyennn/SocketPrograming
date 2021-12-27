@@ -1,7 +1,8 @@
 ﻿# Import Python library
 from PyQt5 import QtWidgets, uic
 from PyQt5 import QtCore, QtGui
-import re, threading, time
+from datetime import date, datetime
+import re, time
 
 # Import custom modules
 from ClientLogin import LoginUi
@@ -44,6 +45,9 @@ class ClientUI(QtWidgets.QDialog):
         self.ui.Register.clicked.connect(self.showRegister)
         self.ui.Connect.clicked.connect(self.getconnect)
         self.ui.Search.clicked.connect(self.QueryType)
+
+        now = str(date.today()).split("-")
+        self.ui.GetDate.setDateTime(QtCore.QDateTime(QtCore.QDate(int(now[0]), int(now[1]), int(now[2])), QtCore.QTime(0, 0, 0)))
     
     # Connect
     def getconnect(self):
@@ -87,14 +91,14 @@ class ClientUI(QtWidgets.QDialog):
         self.RegWidget.exec_()
     
     def UpdateTable(self):
-        print(self.net.Data)
+        # print(self.net.Data)
         
         row = len(self.net.Data) - 1
         self.ui.DataTable.setRowCount(row + 1)
 
         row = 0
         for data in self.net.Data:
-            print(data)
+            # print(data)
             item = QtWidgets.QTableWidgetItem(str(data['type']))
             self.ui.DataTable.setItem(row, 0, item)
             item = QtWidgets.QTableWidgetItem(str(data['brand']))
@@ -109,25 +113,27 @@ class ClientUI(QtWidgets.QDialog):
             #column += 1
 
     def QueryType(self):
-        try:
-            type = self.ui.SearchType.text()
-            
-            if type == "":
-                query = {
-                    "event" : "GetTotal"
-                }
-            else:
-                query = {
-                    "event" : "GetType",
-                    "type"  : type
-                }
-        except:
+        date = "NOW"
+        type = self.ui.SearchType.text()
+        date = str(self.ui.GetDate.date().toPyDate()).replace("-", "")
+        
+        if type == "":
             query = {
-                "event" : "GetTotal"
+                "event" : "GetTotal",
+                "date"  : date
+            }
+        else:
+            query = {
+                "event" : "GetType",
+                "type"  : type,
+                "date"  : date
             }
 
-        
+        # print(query)
+
+        # time.sleep(0.005)
         self.net.send_query(query)
+
         if (self.net.Data != []):
             self.UpdateTable()
         else:
