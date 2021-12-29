@@ -1,16 +1,31 @@
-import asyncio, socket
+﻿import asyncio, socket
 import datetime
 from PyQt5 import QtWidgets, QtCore
-import requests
 from ServerDatabase import Db
 import json
 import threading
+import logging
 from datetime import datetime
 from GUI.uiServer import Ui_GoldpriceServer
+from qtpy.QtCore import QObject, Signal, QThread
+import os
+import sys
 
 # Constanst
 NUM_CONN = 8
 BUFFER = 1024
+
+logger = logging.getLogger(__name__)
+
+class ConsoleWindowLogHandler(logging.Handler, QObject):
+    sigLog = Signal(str)
+    def __init__(self):
+        logging.Handler.__init__(self)
+        QObject.__init__(self)
+
+    def emit(self, logRecord):
+        message = str(logRecord.getMessage())
+        self.sigLog.emit(message)
 
 class ServerSide(QtWidgets.QDialog):
     # Init server
@@ -31,16 +46,30 @@ class ServerSide(QtWidgets.QDialog):
         self.Data = Db()
         self.loadFunction()
         self.show()
+        self.ChangeState()
+
+        consoleHandler = ConsoleWindowLogHandler()
+        consoleHandler.sigLog.connect(self.ui.serverLogsTable.append)
+        logger.addHandler(consoleHandler)
 
     # Link button Start server
     def loadFunction(self):
         self.ui.startButton.clicked.connect(self.run)
+        self.ui.restartButton.clicked.connect(self.restart)
 
     # Starting the server thread
     def run(self):
-        self.thread = threading.Thread(target=self.start_server)
+        self.thread = threading.Thread(target = self.start_server)
         self.ui.startButton.setEnabled(False)
+        self.ChangeState(1)
         self.thread.start()
+
+    def restart(self):
+        reply = QtWidgets.QMessageBox.question(None, "Thông báo", "Bạn có chắc khởi động lại server chứ?")
+        if reply == QtWidgets.QMessageBox.Yes:
+            os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+        else:
+            pass
 
     # Calback server
     def start_server(self):
@@ -50,7 +79,18 @@ class ServerSide(QtWidgets.QDialog):
     def printlogs(self, msg):
         msg = str(msg)
         print(msg)
-        self.ui.serverLogsTable.appendPlainText(msg)
+        logger.error(msg)
+
+    # Show status
+    def ChangeState(self, netstate = 0):
+        # Connecting
+        if (netstate==0):
+            self.ui.statusLabel.setText(str("Trạng thái: Chưa khởi chạy"))
+            return
+        # Connected
+        if (netstate==1):
+            self.ui.statusLabel.setText(str("Trạng thái: Server sẵn sàng tại " + str(socket.gethostbyname(socket.gethostname())) + ":" + str(self.PORT)))
+            return
 
     # Handle client reponse
     async def handle_client(self, client, addr):
@@ -76,7 +116,7 @@ class ServerSide(QtWidgets.QDialog):
                 # Print log
                 try:
                     request = json.loads(data)
-                    # self.printlogs(f"Client Requested.")
+                    self.printlogs(f"Client Requested: {data}")
                 except:
                     pass
 
@@ -89,7 +129,7 @@ class ServerSide(QtWidgets.QDialog):
                 response = json.dumps(self.process_request(request), separators=(',', ':'))
                 await loop.sock_sendall(client, len(response.encode('utf-8')).to_bytes(4, 'big'))
                 await loop.sock_sendall(client, response.encode('utf-8'))
-                # self.printlogs(f"Server response send sucessfully.")
+                self.printlogs(f"Server response send sucessfully.")
 
             # Notify when client close unxpected
             except socket.error as msg:
@@ -113,9 +153,6 @@ class ServerSide(QtWidgets.QDialog):
     # Process client request
     def process_request(self, request):
         # Get database
-        if (request["event"] == "GetTotal"):
-            # self.printlogs(f"Client requested get total data.")
-            return self.Data.GetTotal(request["date"])
 
         # Handle user login
         if (request["event"] == "login"):
@@ -133,8 +170,9 @@ class ServerSide(QtWidgets.QDialog):
 
         # Handle user get gold type
         if (request["event"] == "GetType"):
-            # self.printlogs(f"Client requested get gold type.")
-            return self.Data.GetType(request["type"], request["date"])
+            res = self.Data.GetType(request["type"], request["date"])
+            # self.printlogs(res)
+            return res
             
         # Return None
         return {}

@@ -132,21 +132,12 @@ class ClientUI(QtWidgets.QDialog):
         type = self.ui.SearchType.text()
         date = str(self.ui.GetDate.date().toPyDate()).replace("-", "")
         
-        if type == "":
-            query = {
-                "event" : "GetTotal",
-                "date"  : date
-            }
-        else:
-            query = {
-                "event" : "GetType",
-                "type"  : type,
-                "date"  : date
-            }
+        query = {
+            "event" : "GetType",
+            "type"  : type,
+            "date"  : date
+        }
 
-        # print(query)
-
-        # time.sleep(0.005)
         self.net.send_query(query)
 
         if (self.net.Data != []):

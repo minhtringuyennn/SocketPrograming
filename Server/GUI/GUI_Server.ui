@@ -14,55 +14,10 @@
    <string>Tỷ giá Vàng Việt Nam [SERVER]</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="8" column="4">
-    <widget class="QPushButton" name="restartButton">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Restart Server</string>
-     </property>
-     <property name="autoDefault">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="3">
-    <widget class="QPushButton" name="startButton">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Start Server</string>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="1">
     <widget class="QLabel" name="serverLogsLabel">
      <property name="text">
       <string>Server Logs</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="5">
-    <widget class="QPushButton" name="shutdownButton">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Shutdown Server</string>
-     </property>
-     <property name="autoDefault">
-      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -80,9 +35,38 @@
     </widget>
    </item>
    <item row="4" column="1" colspan="5">
-    <widget class="QPlainTextEdit" name="serverLogsTable">
+    <widget class="QTextEdit" name="serverLogsTable">
      <property name="readOnly">
       <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="5">
+    <widget class="QPushButton" name="restartButton">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Restart Server</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="4">
+    <widget class="QPushButton" name="startButton">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Start Server</string>
      </property>
     </widget>
    </item>

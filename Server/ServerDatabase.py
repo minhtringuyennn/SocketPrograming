@@ -125,7 +125,8 @@ class Db():
                     tmp2.update({'day'  : value['day']})
                     tmp.append(tmp2)
         except:
-            tmp ={}
+            tmp = []
+
         self.data = tmp
 
     def refreshDB(self, date = "NOW"):
@@ -166,26 +167,20 @@ class Db():
         except Exception as msg:
             # Otherwise...
             return {'avai' : False, 'success': False}
-        
-    def GetTotal(self, getDate):
-        todayDate = str(date.today()).replace("-", "")
-
-        if todayDate < getDate:
-            return {}
-
-        if getDate == "NOW" or self.data[0]["day"] == getDate:
-            pass
-        else:
-            print(f"refresh total database {getDate} {self.data[0]['update']}")
-            self.updateJson(getDate)
-
-        return self.data
 
     def GetType(self, search, getDate):
+        Res = []
+
         todayDate = str(date.today()).replace("-", "")
 
         if todayDate < getDate:
-            return {}
+            return Res
+
+        # Make sure dont get empty data
+        if self.data == []:
+            self.updateJson(getDate)
+            if self.data == []:
+                return Res
 
         if getDate == "NOW" or self.data[0]["day"] == getDate:
             pass
@@ -194,7 +189,6 @@ class Db():
             self.updateJson(getDate)
 
         # Return matching type from API
-        Res = []
         for value in self.data:
             tmp1 = unidecode(search.lower())
             tmp2 = unidecode(value['type'].lower())
@@ -202,5 +196,4 @@ class Db():
             if tmp1 in tmp2:
                 Res.append(value)
 
-        # print(value)
         return Res
