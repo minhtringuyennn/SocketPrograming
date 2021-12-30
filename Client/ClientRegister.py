@@ -4,14 +4,14 @@ from PyQt5 import QtWidgets, uic
 from PyQt5 import QtCore, QtGui
 
 # Import pyqt GUI
-from GUI.uiRegister import Ui_RegisterUI
+from GUI.uiRegister import Ui_RegisterFormUI
 
 # Handle Register dialog
 class RegUi(QtWidgets.QDialog):
     # Init dialog
     def __init__(self, Net, parent=None):
         super(RegUi, self).__init__(parent=parent)
-        self.ui = Ui_RegisterUI()
+        self.ui = Ui_RegisterFormUI()
         self.ui.setupUi(self)
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         self.net = Net
@@ -53,7 +53,7 @@ class RegUi(QtWidgets.QDialog):
 
             # Can't login
             if (login["avai"] == False and login["success"] == False):
-                self.ui.statusLabel.setText(str("Không thể đăng nhập! Vui lòng thử lại sau"))
+                self.ui.statusLabel.setText(str("Không thể đăng kí! Vui lòng thử lại sau"))
             elif (not login["avai"]): 
                 # Username is used before
                 self.ui.statusLabel.setText(str("Tên tài khoản đã được sử dụng"))

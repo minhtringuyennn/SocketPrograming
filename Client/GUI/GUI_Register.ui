@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>RegisterUI</class>
- <widget class="QDialog" name="RegisterUI">
+ <class>RegisterFormUI</class>
+ <widget class="QDialog" name="RegisterFormUI">
   <property name="windowModality">
    <enum>Qt::NonModal</enum>
   </property>
@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>295</width>
+    <width>300</width>
     <height>270</height>
    </rect>
   </property>
@@ -21,14 +21,14 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>250</width>
-    <height>200</height>
+    <width>300</width>
+    <height>270</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>350</width>
-    <height>300</height>
+    <height>270</height>
    </size>
   </property>
   <property name="baseSize">
@@ -86,6 +86,9 @@
        <height>25</height>
       </size>
      </property>
+     <property name="inputMethodHints">
+      <set>Qt::ImhNoAutoUppercase</set>
+     </property>
      <property name="placeholderText">
       <string>Nhập tài khoản đăng kí</string>
      </property>
@@ -121,7 +124,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Trạng thái:</string>
+      <string>Trạng thái: Chưa đăng kí</string>
      </property>
     </widget>
    </item>
@@ -153,9 +156,12 @@
       </size>
      </property>
      <property name="text">
-      <string>Register</string>
+      <string>Đăng kí</string>
      </property>
      <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="default">
       <bool>true</bool>
      </property>
     </widget>
@@ -172,7 +178,10 @@
       <enum>Qt::TabFocus</enum>
      </property>
      <property name="text">
-      <string>Cancel</string>
+      <string>Huỷ</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -183,6 +192,9 @@
        <width>0</width>
        <height>25</height>
       </size>
+     </property>
+     <property name="inputMethodHints">
+      <set>Qt::ImhHiddenText|Qt::ImhNoAutoUppercase|Qt::ImhNoPredictiveText|Qt::ImhSensitiveData</set>
      </property>
      <property name="placeholderText">
       <string>Nhập lại mật khẩu người dùng</string>
@@ -231,7 +243,7 @@
   <connection>
    <sender>cancelButton</sender>
    <signal>clicked()</signal>
-   <receiver>RegisterUI</receiver>
+   <receiver>RegisterFormUI</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">

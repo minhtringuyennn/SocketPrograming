@@ -37,8 +37,15 @@ class ClientSide():
         self.send_query(query)
         self.Connected = False
 
+    def log_out(self, userid):
+        query = {
+            "event" : "logout",
+            "user_id": userid
+        }
+        self.send_query(query)
+
     # Handle send query over socket
-    def send_query(self,query):
+    def send_query(self, query):
         # Notify user when client haven't connect server
         if (self.Connected == False):
             QMessageBox.about(None, "Error", "Kết nối chưa được thiết lập.")
@@ -48,15 +55,18 @@ class ClientSide():
         # Send query over socket
         try:
             # Parse raw information
-            squery = json.dumps(query, separators=(',', ':'))
+            squery = json.dumps(query, separators=(',', ':')) # type json
             
             # Send query
+            # First 4 bytes contain query size
             self.server.send(len(squery.encode('utf8')).to_bytes(4, 'big'))
+            # Send all data over socket connection
             self.server.send(squery.encode('utf8'))
             
             # Get server respone
             data = self.server.recv(4)
             size = int.from_bytes(data, "big")
+            
             data = ''
 
             # Get data chunk
@@ -71,7 +81,7 @@ class ClientSide():
 
             # Import data
             try:
-                self.Data = json.loads(data)
+                self.Data = json.loads(data) # json to dictionary
             except:
                 self.Data = []
 

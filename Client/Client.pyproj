@@ -26,14 +26,17 @@
     <Compile Include="ClientHandle.py" />
     <Compile Include="ClientLogin.py" />
     <Compile Include="ClientRegister.py" />
+    <Compile Include="GUI\uiAbout.py" />
     <Compile Include="GUI\uiClient.py" />
     <Compile Include="GUI\uiLogin.py" />
     <Compile Include="GUI\uiRegister.py" />
+    <Compile Include="ClientAbout.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="GUI\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="GUI\GUI_About.ui" />
     <Content Include="GUI\GUI_Client.ui" />
     <Content Include="GUI\GUI_Login.ui" />
     <Content Include="GUI\GUI_Register.ui" />

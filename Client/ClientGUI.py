@@ -7,11 +7,11 @@ import re, time
 # Import custom modules
 from ClientLogin import LoginUi
 from ClientRegister import RegUi
+from ClientAbout import AbtUI
 from ClientHandle import ClientSide
 
 # Import pyqt GUI
 from GUI.uiClient import Ui_GoldPriceCilent
-from GUI.uiLogin import Ui_Login
 
 # Handle Client UI
 class ClientUI(QtWidgets.QDialog):
@@ -21,7 +21,7 @@ class ClientUI(QtWidgets.QDialog):
         
         self.ui = Ui_GoldPriceCilent()
         self.ui.setupUi(self)
-        
+        self.setWindowIcon(QtGui.QIcon('./GUI/icon/logo.png'))
         self.setWindowFlags(
             QtCore.Qt.WindowMinimizeButtonHint |
             QtCore.Qt.WindowMaximizeButtonHint |
@@ -30,8 +30,10 @@ class ClientUI(QtWidgets.QDialog):
 
         self.LoadFunction()
         self.net = ClientSide()
-        self.LoginWidget = LoginUi(self.net)
+
+        self.LoginWidget = LoginUi(self.net, self.ui)
         self.RegWidget = RegUi(self.net)
+        self.AboutWidget = AbtUI()
         
         self.ChangeIP = False
         self.net.Connected = False
@@ -40,21 +42,46 @@ class ClientUI(QtWidgets.QDialog):
 
     # Load UI function
     def LoadFunction(self):
-        self.ui.Login.clicked.connect(self.showLogin)
-        self.ui.Register.clicked.connect(self.showRegister)
-        self.ui.Connect.clicked.connect(self.getconnect)
-        self.ui.Disconnect.clicked.connect(self.disconnect)
-        self.ui.Search.clicked.connect(self.QueryType)
+        self.ui.loginButton.clicked.connect(self.showLogin)
+        self.ui.loginButton.setIcon(QtGui.QIcon('./GUI/icon/login.png'))
+        self.ui.loginButton.setIconSize(QtCore.QSize(12, 12))
+        
+        self.ui.registerButton.clicked.connect(self.showRegister)
+        self.ui.registerButton.setIcon(QtGui.QIcon('./GUI/icon/register.png'))
+        self.ui.registerButton.setIconSize(QtCore.QSize(14, 14))
+        
+        self.ui.aboutButton.clicked.connect(self.showAbout)
+        self.ui.aboutButton.setIcon(QtGui.QIcon('./GUI/icon/info.png'))
+        self.ui.aboutButton.setIconSize(QtCore.QSize(12, 12))
+        
+        self.ui.connectButton.clicked.connect(self.getconnect)
+        self.ui.connectButton.setIcon(QtGui.QIcon('./GUI/icon/connect.png'))
+        self.ui.connectButton.setIconSize(QtCore.QSize(12, 12))
+        
+        self.ui.disconnectButton.clicked.connect(self.disconnect)
+        self.ui.disconnectButton.setIcon(QtGui.QIcon('./GUI/icon/disconnect.png'))
+        self.ui.disconnectButton.setIconSize(QtCore.QSize(12, 12))
+        self.ui.disconnectButton.setEnabled(False)
+        
+        self.ui.logoutButton.clicked.connect(self.logout)
+        self.ui.logoutButton.setIcon(QtGui.QIcon('./GUI/icon/logout.png'))
+        self.ui.logoutButton.setIconSize(QtCore.QSize(12, 12))
+        self.ui.logoutButton.setEnabled(False)
+
+        self.ui.searchButton.clicked.connect(self.QueryType)
+        self.ui.searchButton.setIcon(QtGui.QIcon('./GUI/icon/search.png'))
+        self.ui.searchButton.setIconSize(QtCore.QSize(12, 12))
+        
         now = str(date.today()).split("-")
-        self.ui.GetDate.setDateTime(QtCore.QDateTime(QtCore.QDate(int(now[0]), int(now[1]), int(now[2])), QtCore.QTime(0, 0, 0)))
+        self.ui.getDateButton.setDateTime(QtCore.QDateTime(QtCore.QDate(int(now[0]), int(now[1]), int(now[2])), QtCore.QTime(0, 0, 0)))
     
     # Connect
     def getconnect(self):
         # Get IP field input
-        self.ip = str(self.ui.IP.text())
+        self.ip = str(self.ui.IPField.text())
         
         # Check IP is valid or not
-        if (not re.match(r'^((\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])$', self.ip)):  
+        if (not re.match(r'^((\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])$', self.ip)):
             QtWidgets.QMessageBox.about(None, "Error", "IP nhập vào không hợp lệ!")
             return
 
@@ -70,23 +97,29 @@ class ClientUI(QtWidgets.QDialog):
         self.net.close_connection();
         self.ChangeState(-1)
 
+    def logout(self):
+        self.ui.accountStatus.setText(str("Trạng thái tài khoản: Chưa đăng nhập"))
+        self.ui.loginButton.setEnabled(True)
+        self.ui.logoutButton.setEnabled(False)
+        self.net.log_out(self.LoginWidget.UserID)
+
     # Show status
     def ChangeState(self, netstate = 0):
         # Connecting
-        if (netstate==0):
-            self.ui.Netstate.setText(str("Connecting to " + str(self.ip)))
+        if (netstate == 0):
+            self.ui.netStatus.setText(str("Đang kết nối đến " + str(self.ip)))
             return
         # Connected
-        if (netstate==1):
-            self.ui.Netstate.setText(str("Connected to " + str(self.net.HOST) + ":" + str(self.net.PORT)))
-            self.ui.Connect.setEnabled(False)
-            self.ui.Disconnect.setEnabled(True)
+        if (netstate == 1):
+            self.ui.netStatus.setText(str("Đã kết nối thành công với server " + str(self.net.HOST) + ":" + str(self.net.PORT)))
+            self.ui.connectButton.setEnabled(False)
+            self.ui.disconnectButton.setEnabled(True)
             return
         # Server not found
-        if (netstate==-1):
-            self.ui.Netstate.setText("Connect to " + str(self.net.HOST) + " Error! Server is unavailable!")
-            self.ui.Connect.setEnabled(True)
-            self.ui.Disconnect.setEnabled(False)
+        if (netstate == -1):
+            self.ui.netStatus.setText("Kết nối đến " + str(self.net.HOST) + " đã bị huỷ!")
+            self.ui.connectButton.setEnabled(True)
+            self.ui.disconnectButton.setEnabled(False)
             return
 
     # Show Login Dialog
@@ -96,41 +129,51 @@ class ClientUI(QtWidgets.QDialog):
     # Show Register Dialog
     def showRegister(self):
         self.RegWidget.exec_()
+
+    def showAbout(self):
+        self.AboutWidget.exec_()
     
     def UpdateTable(self):
-        # print(self.net.Data)
         if self.net.Data == {}:
             QtWidgets.QMessageBox.about(None, "Error", "Không có dữ liệu!")
             if self.net.Connected == False:
                 self.ChangeState(-1)
         else:
             row = len(self.net.Data) - 1
-            self.ui.DataTable.setRowCount(row + 1)
+            self.ui.dataTable.setRowCount(row + 1)
 
             row = 0
             for data in self.net.Data:
-                # print(data)
-                item = QtWidgets.QTableWidgetItem(str(data['type']))
-                self.ui.DataTable.setItem(row, 0, item)
-                item = QtWidgets.QTableWidgetItem(str(data['brand']))
-                self.ui.DataTable.setItem(row, 1, item)
-                item = QtWidgets.QTableWidgetItem(str(data['buy']))
-                self.ui.DataTable.setItem(row, 2, item)
-                item = QtWidgets.QTableWidgetItem(str(data['sell']))
-                self.ui.DataTable.setItem(row, 3, item)
-                item = QtWidgets.QTableWidgetItem(str(data['update']))
-                self.ui.DataTable.setItem(row, 4, item)
-                row += 1
-                #column += 1
 
+                item = QtWidgets.QTableWidgetItem(str(data['type']))
+                self.ui.dataTable.setItem(row, 0, item)
+                
+                item = QtWidgets.QTableWidgetItem(str(data['brand']))
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.ui.dataTable.setItem(row, 1, item)
+                
+                item = QtWidgets.QTableWidgetItem(str(data['buy']))
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.ui.dataTable.setItem(row, 2, item)
+                
+                item = QtWidgets.QTableWidgetItem(str(data['sell']))
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.ui.dataTable.setItem(row, 3, item)
+                
+                item = QtWidgets.QTableWidgetItem(str(data['update']))
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.ui.dataTable.setItem(row, 4, item)
+                
+                row += 1
+                
     def QueryType(self):
         if self.net.Connected and not self.LoginWidget.isLogin:
             QtWidgets.QMessageBox.about(None, "Error", "Người dùng chưa đăng nhập!")
             return
 
         date = "NOW"
-        type = self.ui.SearchType.text()
-        date = str(self.ui.GetDate.date().toPyDate()).replace("-", "")
+        type = self.ui.searchField.text()
+        date = str(self.ui.getDateButton.date().toPyDate()).replace("-", "")
         
         query = {
             "event" : "GetType",

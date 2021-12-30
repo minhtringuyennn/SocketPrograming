@@ -6,7 +6,8 @@ import json
 import threading
 import logging
 from datetime import datetime
-from GUI.uiServer import Ui_GoldpriceServer
+from GUI.uiServer import Ui_GoldPriceServer
+from PyQt5 import QtCore, QtGui
 from qtpy.QtCore import QObject, Signal, QThread
 import os
 import sys
@@ -32,9 +33,10 @@ class ServerSide(QtWidgets.QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.ui = Ui_GoldpriceServer()
+        self.ui = Ui_GoldPriceServer()
         self.ui.setupUi(self)
 
+        self.setWindowIcon(QtGui.QIcon('./GUI/icon/logo.png'))
         self.setWindowFlags(
             QtCore.Qt.WindowMinimizeButtonHint |
             QtCore.Qt.WindowMaximizeButtonHint |
@@ -55,7 +57,12 @@ class ServerSide(QtWidgets.QDialog):
     # Link button Start server
     def loadFunction(self):
         self.ui.startButton.clicked.connect(self.run)
+        self.ui.startButton.setIcon(QtGui.QIcon('./GUI/icon/start.png'))
+        self.ui.startButton.setIconSize(QtCore.QSize(15, 15))
+
         self.ui.restartButton.clicked.connect(self.restart)
+        self.ui.restartButton.setIcon(QtGui.QIcon('./GUI/icon/restart.png'))
+        self.ui.restartButton.setIconSize(QtCore.QSize(12, 12))
 
     # Starting the server thread
     def run(self):
@@ -100,7 +107,7 @@ class ServerSide(QtWidgets.QDialog):
         while True:
             try:
                 # Waiting for connection
-                request = await asyncio.wait_for((loop.sock_recv(client, 4)), timeout=600)
+                request = await asyncio.wait_for((loop.sock_recv(client, 4)), timeout = 6000)
                 size = int.from_bytes(request, "big")
                 data = ""
 
@@ -138,6 +145,8 @@ class ServerSide(QtWidgets.QDialog):
 
             # If connection time-out
             except asyncio.TimeoutError as te:
+                response = 'Request Timeout'
+                await loop.sock_sendall(client, response.encode('utf8'))
                 self.printlogs(f"Client Connection Timeout.")
                 break
 
@@ -165,6 +174,13 @@ class ServerSide(QtWidgets.QDialog):
         if (request["event"] == "register"):
             self.printlogs(f"Client requested register at: " + str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")) + ".")
             res = self.Data.Register(request["username"], request["password"])
+            self.printlogs(res)
+            return res
+
+        # Handle user logout
+        if (request["event"] == "logout"):
+            self.printlogs(f"Client requested logout at: " + str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")) + ".")
+            res = self.Data.Logout(request["user_id"])
             self.printlogs(res)
             return res
 

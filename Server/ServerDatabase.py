@@ -1,9 +1,7 @@
 ﻿import sqlite3
+import requests, threading, time
 from sqlite3 import Error
-import requests 
-import time
 from datetime import date, datetime
-import threading
 from unidecode import unidecode
 
 # Common gold type
@@ -68,54 +66,58 @@ goldType = {
 class Db():
     def __init__(self):
         # Init database
-        self.conn = None
+        self.connectionUserDatabase = None
+        self.userLoginList = []
+        self.todayDate = str(date.today()).replace("-", "") # Get today date (Eg. 20213112)
+
         try:
-            self.conn = sqlite3.connect("./Database/user.db", check_same_thread = False)
-            self.Create_Table()
+            self.connectionUserDatabase = sqlite3.connect("./Database/user.db", check_same_thread = False)
+            self.createTable()
         except Error as e:
             print("SQL Connection Error!")
         
         # Start multi-thread
         # Request the API from server
-        rt = threading.Thread(target = self.refreshDB)
-        rt.start()
+        threadRefreshDB = threading.Thread(target = self.refreshDB)
+        threadRefreshDB.start()
 
-    def Create_Table(self):
-        # Init database
-        sql_query_user = """ CREATE TABLE IF NOT EXISTS Users (
+    # Init database
+    def createTable(self):
+        query = """ CREATE TABLE IF NOT EXISTS Users (
                                         user_id integer PRIMARY KEY,
                                         username text NOT NULL,
                                         password text NOT NULL
                                     ); """
-        self.__Query(sql_query_user)
+        self.QueryUserDatabase(query)
 
-    def __Query(self, query):
-        # Connecting database
-        if self.conn is not None:
+    # Commit query
+    def QueryUserDatabase(self, query):
+        if self.connectionUserDatabase is not None:
             try:
-                c = self.conn.cursor()
+                c = self.connectionUserDatabase.cursor()
                 c.execute(query)
-                self.conn.commit()
+                self.connectionUserDatabase.commit()
                 return c.fetchall()
-            except Error as e:
+            except Error as err:
                 print("Query SQL Error!")
-                raise e;
-    
+                raise err;
+
+    # Request JSON from the Internet
     def updateJson(self, date):
         api = requests.get(f"https://tygia.com/json.php?gold=1&date={date}")
-            
+
         # Fix BOM Header
         if api.text[0] == u'\ufeff':
             api.encoding = 'utf-8-sig'
-            
+
         # Pass data from json to self.data
         self.data = api.json();
 
         # Filter unnecessary information
-        tmp = []
+        tmp = [] # Python list [dict1, dict2]
         try:
             for value in self.data['golds'][0]['value']:
-                tmp2 = {}
+                tmp2 = {} # Python dictionary { ["property1"]: value1, ["property2"]: value2 }
                 if value['type'] in goldType:
                     tmp2.update({'type' : value['type']})
                     tmp2.update({'brand': value['brand']})
@@ -127,65 +129,80 @@ class Db():
         except:
             tmp = []
 
+        # Return data
         self.data = tmp
 
+    # Request API every 3600s
     def refreshDB(self, date = "NOW"):
-        # Request API every 3600s
         while True:
             self.updateJson(date)
-            # Sleep
-            time.sleep(3600)
+            time.sleep(3600) # Sleep
 
+    # Query for login
     def Login(self, username, password):
-        # Query user from database
-        cursor = self.conn.cursor()
+        # Query to get user from database
+        cursor = self.connectionUserDatabase.cursor()
         cursor.execute("SELECT user_id FROM Users WHERE username=:username AND password=:password", { 'username': username ,'password': password })
         result = cursor.fetchone()
-       
+
         if result is None:
-            # If not seen
-            return {'valid_users': False}
+            # If havent seen in database
+            return {'user_id' : -1 , 'valid_users': False}
         else:
             # If seen
-            return {'user_id' : result[0] , 'valid_users': True}
+            # Havent login
+            if not result[0] in self.userLoginList:
+                self.userLoginList.append(result[0])
+                return {'user_id' : result[0] , 'valid_users': True}
+            # Have login already
+            else:
+                return {'user_id' : result[0] , 'valid_users': False}
 
+    # Query for register
     def Register(self, username, password):
         # Query user name from database
-        cursor = self.conn.cursor()
-        result = None
+        cursor = self.connectionUserDatabase.cursor()
         cursor.execute("SELECT username FROM Users WHERE username=:username", {'username': username })
         result = cursor.fetchone()
 
         if result is not None:
-            # If not match (haven't register)
+            # If havent seen in database (haven't register)
             return {'avai' : False, 'success': True}
         try:
             # Insert new user into database
             cursor.execute("INSERT INTO Users (username, password) VALUES (:username,:password)", { 'username': username ,'password': password })
-            self.conn.commit()
+            self.connectionUserDatabase.commit()
             return {'avai' : True, 'success': True}
         except Exception as msg:
-            # Otherwise...
+            # Can't add user to databse
             return {'avai' : False, 'success': False}
 
+    def Logout(self, userid):
+        try:
+            self.userLoginList.remove(userid)
+            return {'success': True}
+        except:
+            return {'success': False}
+
+    # Handle client request
     def GetType(self, search, getDate):
         Res = []
 
-        todayDate = str(date.today()).replace("-", "")
-
-        if todayDate < getDate:
+        # Return none if getDate > todayDate
+        if getDate > self.todayDate:
             return Res
 
-        # Make sure dont get empty data
+        # Make sure we dont get empty data
         if self.data == []:
             self.updateJson(getDate)
             if self.data == []:
                 return Res
 
+        # Only reupdate if needed
         if getDate == "NOW" or self.data[0]["day"] == getDate:
             pass
         else:
-            print(f"refresh database {getDate} {self.data[0]['update']}")
+            # print(f"Refresh database {getDate} {self.data[0]['update']}")
             self.updateJson(getDate)
 
         # Return matching type from API
