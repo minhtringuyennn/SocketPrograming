@@ -80,7 +80,7 @@ class ServerSide(QtWidgets.QDialog):
         reply = QtWidgets.QMessageBox.question(None, "Thông báo", "Bạn có chắc khởi động lại server chứ?")
         if reply == QtWidgets.QMessageBox.Yes:
             try:
-                os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+                os.execv(sys.executable, ['python3'] + sys.argv)
             except:
                 QtWidgets.QMessageBox.critical(None, "Lỗi", "Không thể khởi động lại máy chủ! Bạn nên để server tại ổ C!")
                 pass
