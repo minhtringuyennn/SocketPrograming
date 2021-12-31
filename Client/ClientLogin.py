@@ -38,7 +38,7 @@ class LoginUi(QtWidgets.QDialog):
             return
 
         if (state == 1):
-            self.clientUI.accountStatus.setText(str(f"Trạng thái tài khoản: Đang đăng nhập với tài khoản '{username}'"))
+            self.clientUI.accountStatus.setText(str(f"Đang đăng nhập với tài khoản '{username}'"))
             self.clientUI.loginButton.setEnabled(False)
             self.clientUI.logoutButton.setEnabled(True)
             return

@@ -58,6 +58,7 @@ class Ui_RegisterFormUI(object):
         self.repasswordField = QtWidgets.QLineEdit(RegisterFormUI)
         self.repasswordField.setMinimumSize(QtCore.QSize(0, 25))
         self.repasswordField.setInputMethodHints(QtCore.Qt.ImhHiddenText|QtCore.Qt.ImhNoAutoUppercase|QtCore.Qt.ImhNoPredictiveText|QtCore.Qt.ImhSensitiveData)
+        self.repasswordField.setEchoMode(QtWidgets.QLineEdit.Password)
         self.repasswordField.setObjectName("repasswordField")
         self.gridLayout.addWidget(self.repasswordField, 10, 0, 1, 3)
         self.usernameField = QtWidgets.QLineEdit(RegisterFormUI)

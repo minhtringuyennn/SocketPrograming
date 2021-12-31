@@ -10,18 +10,6 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class DateEdit(QtWidgets.QDateEdit):
-    def __init__(self, parent=None):
-        super().__init__(parent, calendarPopup=True)
-        self._today_button = QtWidgets.QPushButton(self.tr("Today"))
-        self._today_button.clicked.connect(self._update_today)
-        self.calendarWidget().layout().addWidget(self._today_button)
-
-    @QtCore.pyqtSlot()
-    def _update_today(self):
-        self._today_button.clearFocus()
-        today = QtCore.QDate.currentDate()
-        self.calendarWidget().setSelectedDate(today)
 
 class Ui_GoldPriceCilent(object):
     def setupUi(self, GoldPriceCilent):
@@ -126,7 +114,7 @@ class Ui_GoldPriceCilent(object):
         self.gridLayout.addWidget(self.accountLabel, 10, 0, 1, 1)
         self.netStatus = QtWidgets.QLabel(GoldPriceCilent)
         self.netStatus.setMinimumSize(QtCore.QSize(150, 0))
-        self.netStatus.setMaximumSize(QtCore.QSize(300, 25))
+        self.netStatus.setMaximumSize(QtCore.QSize(395, 25))
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
@@ -139,7 +127,7 @@ class Ui_GoldPriceCilent(object):
         self.disconnectButton.setAutoDefault(False)
         self.disconnectButton.setObjectName("disconnectButton")
         self.gridLayout.addWidget(self.disconnectButton, 4, 4, 1, 1)
-        self.getDateButton = DateEdit(GoldPriceCilent)
+        self.getDateButton = QtWidgets.QDateEdit(GoldPriceCilent)
         self.getDateButton.setMinimumSize(QtCore.QSize(0, 25))
         self.getDateButton.setAlignment(QtCore.Qt.AlignCenter)
         self.getDateButton.setDateTime(QtCore.QDateTime(QtCore.QDate(2021, 12, 31), QtCore.QTime(0, 0, 0)))
@@ -201,14 +189,6 @@ class Ui_GoldPriceCilent(object):
         self.dataTable.setHorizontalHeaderItem(3, item)
         item = QtWidgets.QTableWidgetItem()
         self.dataTable.setHorizontalHeaderItem(4, item)
-
-        header = self.dataTable.horizontalHeader()       
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)
-
         self.dataTable.horizontalHeader().setVisible(True)
         self.dataTable.horizontalHeader().setCascadingSectionResizes(False)
         self.dataTable.horizontalHeader().setHighlightSections(True)

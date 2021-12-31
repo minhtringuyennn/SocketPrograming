@@ -2,7 +2,7 @@
 from PyQt5 import QtWidgets, uic
 from PyQt5 import QtCore, QtGui
 from datetime import date, datetime
-import re, time
+import re
 
 # Import custom modules
 from ClientLogin import LoginUi
@@ -82,7 +82,7 @@ class ClientUI(QtWidgets.QDialog):
         
         # Check IP is valid or not
         if (not re.match(r'^((\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])$', self.ip)):
-            QtWidgets.QMessageBox.about(None, "Error", "IP nhập vào không hợp lệ!")
+            QtWidgets.QMessageBox.critical(None, "Lỗi", "IP nhập vào không hợp lệ!")
             return
 
         # Show network connection status
@@ -91,19 +91,22 @@ class ClientUI(QtWidgets.QDialog):
         if (self.net.create_connection(self.ip)):
             self.ChangeState(1)
         else:
-            self.ChangeState(-1)
+            self.ChangeState(-2)
 
     def disconnect(self):
         self.logout()
-        self.net.close_connection();
         self.ChangeState(-1)
+        self.net.close_connection();
 
     def logout(self):
-        self.ui.accountStatus.setText(str("Trạng thái tài khoản: Chưa đăng nhập"))
-        self.LoginWidget.isLogin = False
-        self.ui.loginButton.setEnabled(True)
-        self.ui.logoutButton.setEnabled(False)
-        self.net.log_out(self.LoginWidget.UserID)
+        if self.LoginWidget.isLogin == True:
+            self.ui.accountStatus.setText(str("Trạng thái tài khoản: Chưa đăng nhập"))
+            self.LoginWidget.isLogin = False
+            self.ui.loginButton.setEnabled(True)
+            self.ui.logoutButton.setEnabled(False)
+            self.net.log_out(self.LoginWidget.UserID)
+        else:
+            pass
 
     # Show status
     def ChangeState(self, netstate = 0):
@@ -113,13 +116,20 @@ class ClientUI(QtWidgets.QDialog):
             return
         # Connected
         if (netstate == 1):
-            self.ui.netStatus.setText(str("Đã kết nối thành công với server " + str(self.net.HOST) + ":" + str(self.net.PORT)))
+            self.ui.netStatus.setText(str("Đã kết nối thành công với server " + str(self.net.HOST)))
             self.ui.connectButton.setEnabled(False)
             self.ui.disconnectButton.setEnabled(True)
             return
         # Server not found
         if (netstate == -1):
-            self.ui.netStatus.setText("Kết nối đến " + str(self.net.HOST) + " thất bại!")
+            self.ui.netStatus.setText("Trạng thái kết nối: Chưa kết nối")
+            self.ui.connectButton.setEnabled(True)
+            self.ui.disconnectButton.setEnabled(False)
+            return
+        # Lost connection
+        if (netstate == -2):
+            QtWidgets.QMessageBox.critical(None, "Lỗi", "Không thể kết nối đến server!")
+            self.ui.netStatus.setText("Trạng thái kết nối: Không thể kết nối đến server")
             self.ui.connectButton.setEnabled(True)
             self.ui.disconnectButton.setEnabled(False)
             return
@@ -144,9 +154,10 @@ class ClientUI(QtWidgets.QDialog):
     
     def UpdateTable(self):
         if self.net.Data == {}:
-            QtWidgets.QMessageBox.about(None, "Error", "Không có dữ liệu!")
+            self.ui.dataTable.setRowCount(0)
+
             if self.net.Connected == False:
-                self.ChangeState(-1)
+                self.ChangeState(-2)
         else:
             row = len(self.net.Data) - 1
             self.ui.dataTable.setRowCount(row + 1)
@@ -177,7 +188,7 @@ class ClientUI(QtWidgets.QDialog):
                 
     def QueryType(self):
         if self.net.Connected and not self.LoginWidget.isLogin:
-            QtWidgets.QMessageBox.about(None, "Error", "Người dùng chưa đăng nhập!")
+            QtWidgets.QMessageBox.critical(None, "Lỗi", "Người dùng chưa đăng nhập!")
             return
 
         date = "NOW"
@@ -195,9 +206,9 @@ class ClientUI(QtWidgets.QDialog):
         if (self.net.Data != []):
             self.UpdateTable()
         else:
-            QtWidgets.QMessageBox.about(None, "Error", "Không có dữ liệu!")
+            self.ui.dataTable.setRowCount(0)
             if self.net.Connected == False:
-                self.ChangeState(-1)
+                self.ChangeState(-2)
 
     # Close UI
     def CloseUI(self):
