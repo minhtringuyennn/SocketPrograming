@@ -79,16 +79,22 @@ class ClientUI(QtWidgets.QDialog):
     def getconnect(self):
         # Get IP field input
         self.ip = str(self.ui.IPField.text())
+        self.port = str(self.ui.PORTField.text())
         
         # Check IP is valid or not
         if (not re.match(r'^((\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])$', self.ip)):
             QtWidgets.QMessageBox.critical(None, "Lỗi", "IP nhập vào không hợp lệ!")
             return
 
+        # Check PORT is valid or not
+        if (self.port.isnumeric() == False or len(self.port) > 5 or int(self.port) > 65535):
+            QtWidgets.QMessageBox.critical(None, "Lỗi", "PORT nhập vào không hợp lệ!")
+            return
+
         # Show network connection status
         self.ChangeState(0)
 
-        if (self.net.create_connection(self.ip)):
+        if (self.net.create_connection(self.ip, self.port)):
             self.ChangeState(1)
         else:
             self.ChangeState(-2)
@@ -116,7 +122,7 @@ class ClientUI(QtWidgets.QDialog):
             return
         # Connected
         if (netstate == 1):
-            self.ui.netStatus.setText(str("Đã kết nối thành công với server " + str(self.net.HOST)))
+            self.ui.netStatus.setText(str("Đã kết nối thành công với server " + str(self.net.HOST) + ":" + str(self.net.PORT)))
             self.ui.connectButton.setEnabled(False)
             self.ui.disconnectButton.setEnabled(True)
             return

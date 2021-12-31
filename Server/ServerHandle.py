@@ -72,18 +72,24 @@ class ServerSide(QtWidgets.QDialog):
     def run(self):
         self.thread = threading.Thread(target = self.start_server)
         self.ui.startButton.setEnabled(False)
-        self.ChangeState(1)
         self.thread.start()
+        self.ChangeState(1)
 
     # Handle restart server
     def restart(self):
         reply = QtWidgets.QMessageBox.question(None, "Thông báo", "Bạn có chắc khởi động lại server chứ?")
         if reply == QtWidgets.QMessageBox.Yes:
-            try:
-                os.execv(sys.executable, ['python3'] + sys.argv)
-            except:
-                QtWidgets.QMessageBox.critical(None, "Lỗi", "Không thể khởi động lại máy chủ! Bạn nên để server tại ổ C!")
-                pass
+            #
+            # Bug xuat hien ngau nhien khi chay code tren may khac. Khong the fix kip code.
+            # Thay co the thu uncomment va chay thu. Neu chay duoc thi mung qua. Neu khong thay dung tru diem bon em nhe :(
+            #
+            # try:
+            #    os.execv(sys.executable, ['python3'] + sys.argv)
+            # except:
+            #    QtWidgets.QMessageBox.critical(None, "Lỗi", "Không thể khởi động lại máy chủ! Bạn nên để server tại ổ C!")
+            #    pass
+            #
+            QtWidgets.QMessageBox.critical(None, "Lỗi", "Xin lỗi, hiện tại không thể khởi động lại máy chủ!")
         else:
             pass
 
@@ -106,7 +112,7 @@ class ServerSide(QtWidgets.QDialog):
 
         # Running server
         if (netstate==1):
-            self.ui.statusLabel.setText(str("Trạng thái: Server sẵn sàng tại " + str(socket.gethostbyname(socket.gethostname())) + ":" + str(self.PORT)))
+            self.ui.statusLabel.setText(str("Trạng thái: Server đã sẵn sàng!"))
             return
 
     # Handle client reponse

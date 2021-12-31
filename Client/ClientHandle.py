@@ -14,14 +14,14 @@ class ClientSide():
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Create network connection
-    def create_connection(self, IP):
+    def create_connection(self, IP, PORT):
         # Get HOST and PORT
         self.HOST = IP
-        PORT = self.PORT
-        
+        self.PORT = PORT
+
         # Try connect server
         try:
-            server_address = (self.HOST, PORT)
+            server_address = (self.HOST, self.PORT)
             self.server =  socket.create_connection(server_address, timeout = 1)
             self.Connected = True
             return True
