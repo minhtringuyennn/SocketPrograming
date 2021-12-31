@@ -99,6 +99,7 @@ class ClientUI(QtWidgets.QDialog):
 
     def logout(self):
         self.ui.accountStatus.setText(str("Trạng thái tài khoản: Chưa đăng nhập"))
+        self.LoginWidget.isLogin = False
         self.ui.loginButton.setEnabled(True)
         self.ui.logoutButton.setEnabled(False)
         self.net.log_out(self.LoginWidget.UserID)
@@ -117,17 +118,24 @@ class ClientUI(QtWidgets.QDialog):
             return
         # Server not found
         if (netstate == -1):
-            self.ui.netStatus.setText("Kết nối đến " + str(self.net.HOST) + " đã bị huỷ!")
+            self.ui.netStatus.setText("Kết nối đến " + str(self.net.HOST) + " thất bại!")
             self.ui.connectButton.setEnabled(True)
             self.ui.disconnectButton.setEnabled(False)
             return
 
     # Show Login Dialog
     def showLogin(self):
+        self.LoginWidget.ui.usernameField.clear()
+        self.LoginWidget.ui.passwordField.clear()
+        self.LoginWidget.ui.statusLabel.setText("Trạng thái:")
         self.LoginWidget.exec_()
 
     # Show Register Dialog
     def showRegister(self):
+        self.RegWidget.ui.usernameField.clear()
+        self.RegWidget.ui.passwordField.clear()
+        self.RegWidget.ui.repasswordField.clear()
+        self.RegWidget.ui.statusLabel.setText("Trạng thái:")
         self.RegWidget.exec_()
 
     def showAbout(self):

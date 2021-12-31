@@ -1,11 +1,12 @@
-﻿import sqlite3
+﻿# import Python Library
+import sqlite3
 import requests, threading, time
 from sqlite3 import Error
 from datetime import date, datetime
 from unidecode import unidecode
 
 # Common gold type
-goldType = {
+goldType = [
         'Kim Thần Tài', 
         'AVPL / DOJI ĐN buôn', 
         'Lộc Phát Tài', 
@@ -61,15 +62,17 @@ goldType = {
         'Kim Tuất', 
         'Nữ Trang 18k', 
         'DOJI Hải Phòng buôn'
-    }
+    ]
 
+# Handle server database
 class Db():
     def __init__(self):
-        # Init database
+        # Init server
         self.connectionUserDatabase = None
         self.userLoginList = []
         self.todayDate = str(date.today()).replace("-", "") # Get today date (Eg. 20213112)
 
+        # Connect database
         try:
             self.connectionUserDatabase = sqlite3.connect("./Database/user.db", check_same_thread = False)
             self.createTable()
@@ -83,11 +86,13 @@ class Db():
 
     # Init database
     def createTable(self):
+        # Query to init database
         query = """ CREATE TABLE IF NOT EXISTS Users (
                                         user_id integer PRIMARY KEY,
                                         username text NOT NULL,
                                         password text NOT NULL
                                     ); """
+        # Commit query
         self.QueryUserDatabase(query)
 
     # Commit query
@@ -116,6 +121,7 @@ class Db():
         # Filter unnecessary information
         tmp = [] # Python list [dict1, dict2]
         try:
+            # Get each value from gold list
             for value in self.data['golds'][0]['value']:
                 tmp2 = {} # Python dictionary { ["property1"]: value1, ["property2"]: value2 }
                 if value['type'] in goldType:
@@ -129,18 +135,19 @@ class Db():
         except:
             tmp = []
 
-        # Return data
+        # Return all gold data
         self.data = tmp
 
     # Request API every 3600s
     def refreshDB(self, date = "NOW"):
         while True:
+            print(f"Updated database at {datetime.now()}")
             self.updateJson(date)
             time.sleep(3600) # Sleep
 
     # Query for login
     def Login(self, username, password):
-        # Query to get user from database
+        # Query to get user record from database
         cursor = self.connectionUserDatabase.cursor()
         cursor.execute("SELECT user_id FROM Users WHERE username=:username AND password=:password", { 'username': username ,'password': password })
         result = cursor.fetchone()
@@ -177,6 +184,7 @@ class Db():
             # Can't add user to databse
             return {'avai' : False, 'success': False}
 
+    # Logout user from database
     def Logout(self, userid):
         try:
             self.userLoginList.remove(userid)
@@ -186,6 +194,8 @@ class Db():
 
     # Handle client request
     def GetType(self, search, getDate):
+        # Init result
+        # res == None
         Res = []
 
         # Return none if getDate > todayDate
@@ -193,8 +203,12 @@ class Db():
             return Res
 
         # Make sure we dont get empty data
+        # Case last query dont have data
         if self.data == []:
+            # Try update again
             self.updateJson(getDate)
+            
+            # Still cannt get data
             if self.data == []:
                 return Res
 
@@ -202,15 +216,15 @@ class Db():
         if getDate == "NOW" or self.data[0]["day"] == getDate:
             pass
         else:
-            # print(f"Refresh database {getDate} {self.data[0]['update']}")
             self.updateJson(getDate)
 
         # Return matching type from API
         for value in self.data:
-            tmp1 = unidecode(search.lower())
-            tmp2 = unidecode(value['type'].lower())
+            tmp1 = unidecode(search.lower()) # Convert query to lowercase (EG: Kim Ngưu --> kim ngưu)
+            tmp2 = unidecode(value['type'].lower()) # Convert Vietnamese string (EG: kim ngưu --> kim nguu)
 
             if tmp1 in tmp2:
                 Res.append(value)
 
+        # Return data
         return Res

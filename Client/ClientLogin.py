@@ -5,6 +5,8 @@ from PyQt5 import QtCore, QtGui
 
 # Import pyqt GUI
 from GUI.uiLogin import Ui_LoginUI
+
+# Import Python library
 import time
 
 class LoginUi(QtWidgets.QDialog):
@@ -24,17 +26,19 @@ class LoginUi(QtWidgets.QDialog):
     # Connect UI Button
     def LoadFunction(self):
         self.ui.loginButton.clicked.connect(self.LoginProcess)
-        self.ui.usernameField.clear()
-        # self.ui.passwordField.clear()
     
-    def ChangeState(self, state = 0):
+    def ChangeState(self, state = 0, username = ""):
+        self.ui.usernameField.clear()
+        self.ui.passwordField.clear()
+
         if (state == 0):
             self.clientUI.accountStatus.setText(str("Trạng thái tài khoản: Chưa đăng nhập"))
             self.clientUI.loginButton.setEnabled(True)
             self.clientUI.logoutButton.setEnabled(False)
             return
+
         if (state == 1):
-            self.clientUI.accountStatus.setText(str("Trạng thái tài khoản: Đã đăng nhập"))
+            self.clientUI.accountStatus.setText(str(f"Trạng thái tài khoản: Đang đăng nhập với tài khoản '{username}'"))
             self.clientUI.loginButton.setEnabled(False)
             self.clientUI.logoutButton.setEnabled(True)
             return
@@ -48,6 +52,10 @@ class LoginUi(QtWidgets.QDialog):
         
         # Handle login
         try:
+            if self.isLogin:
+                self.ui.statusLabel.setText("Bạn đã đăng nhập! Vui lòng thoát tài khoản!")
+                return
+
             # Send query over socket
             query = {
                 "event" : "login",
@@ -57,8 +65,6 @@ class LoginUi(QtWidgets.QDialog):
             
             self.net.send_query(query)
             login = self.net.Data
-
-            print(login)
             
             if (login == []): return
             
@@ -66,14 +72,14 @@ class LoginUi(QtWidgets.QDialog):
             
             # If server dont recognize user
             if not self.isLogin:
-                self.ChangeState(0)
+                self.ChangeState(0, None)
                 if login["user_id"] == -1:
                     self.ui.statusLabel.setText("Tài khoản hoặc mật khẩu không chính xác!")
                 else:
                     self.ui.statusLabel.setText("Tài khoản của bạn đã đăng nhập tại nơi khác!")
             else:
                 # Notify user login successfuly
-                self.ChangeState(1)
+                self.ChangeState(1, username)
                 self.ui.statusLabel.setText(str("Chào mừng bạn, " + username + "!"))
                 self.UserID = login["user_id"]
 

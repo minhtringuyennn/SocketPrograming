@@ -1,21 +1,22 @@
-﻿import asyncio, socket
+﻿# Import Python library
+import os, sys, socket, threading, logging, asyncio, json
 import datetime
-from PyQt5 import QtWidgets, QtCore
-from ServerDatabase import Db
-import json
-import threading
-import logging
 from datetime import datetime
-from GUI.uiServer import Ui_GoldPriceServer
+
+# Import Pyqt library
 from PyQt5 import QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore
 from qtpy.QtCore import QObject, Signal, QThread
-import os
-import sys
+
+# Import custom module
+from ServerDatabase import Db
+from GUI.uiServer import Ui_GoldPriceServer
 
 # Constanst
 NUM_CONN = 8
 BUFFER = 1024
 
+# Class handle console logging to pyqt
 logger = logging.getLogger(__name__)
 
 class ConsoleWindowLogHandler(logging.Handler, QObject):
@@ -28,11 +29,13 @@ class ConsoleWindowLogHandler(logging.Handler, QObject):
         message = str(logRecord.getMessage())
         self.sigLog.emit(message)
 
+# Handle server
 class ServerSide(QtWidgets.QDialog):
     # Init server
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Init GUI
         self.ui = Ui_GoldPriceServer()
         self.ui.setupUi(self)
 
@@ -47,14 +50,15 @@ class ServerSide(QtWidgets.QDialog):
         self.PORT = 12345
         self.Data = Db()
         self.loadFunction()
-        self.show()
         self.ChangeState()
+        self.show()
 
+        # Bind console to pyqt
         consoleHandler = ConsoleWindowLogHandler()
         consoleHandler.sigLog.connect(self.ui.serverLogsTable.append)
         logger.addHandler(consoleHandler)
 
-    # Link button Start server
+    # Connect button to function
     def loadFunction(self):
         self.ui.startButton.clicked.connect(self.run)
         self.ui.startButton.setIcon(QtGui.QIcon('./GUI/icon/start.png'))
@@ -71,6 +75,7 @@ class ServerSide(QtWidgets.QDialog):
         self.ChangeState(1)
         self.thread.start()
 
+    # handle restart server
     def restart(self):
         reply = QtWidgets.QMessageBox.question(None, "Thông báo", "Bạn có chắc khởi động lại server chứ?")
         if reply == QtWidgets.QMessageBox.Yes:
@@ -78,7 +83,7 @@ class ServerSide(QtWidgets.QDialog):
         else:
             pass
 
-    # Calback server
+    # Run server async
     def start_server(self):
         asyncio.run(self.run_server())
 
@@ -90,37 +95,41 @@ class ServerSide(QtWidgets.QDialog):
 
     # Show status
     def ChangeState(self, netstate = 0):
-        # Connecting
+        # Havent run
         if (netstate==0):
             self.ui.statusLabel.setText(str("Trạng thái: Chưa khởi chạy"))
             return
-        # Connected
+
+        # Running server
         if (netstate==1):
             self.ui.statusLabel.setText(str("Trạng thái: Server sẵn sàng tại " + str(socket.gethostbyname(socket.gethostname())) + ":" + str(self.PORT)))
             return
 
     # Handle client reponse
     async def handle_client(self, client, addr):
+        # Create loop to get event
         loop = asyncio.get_event_loop()
         request = None 
 
         while True:
             try:
                 # Waiting for connection
-                request = await asyncio.wait_for((loop.sock_recv(client, 4)), timeout = 6000)
+                request = await asyncio.wait_for((loop.sock_recv(client, 4)), timeout = 6000) # Timeout after 6000s (100 minutes)
+                
+                # Get data size
                 size = int.from_bytes(request, "big")
-                data = ""
 
                 # Recieve data from client
+                data = ""
                 while size > 0:
-                    recv = (await loop.sock_recv(client, min(BUFFER,size))).decode('utf8')
+                    recv = (await loop.sock_recv(client, min(BUFFER, size))).decode('utf8')
                     data += recv
                     if (size > len(recv)):
                         size -= len(recv)
                     else:
                         size = 0
 
-                # Print log
+                # Try loading data
                 try:
                     request = json.loads(data)
                     self.printlogs(f"Client Requested: {data}")
@@ -197,7 +206,6 @@ class ServerSide(QtWidgets.QDialog):
     async def run_server(self):
         # Establish socket connection
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         while True:
             try:
                 self.server.bind((self.HOST, self.PORT))
@@ -207,6 +215,7 @@ class ServerSide(QtWidgets.QDialog):
                 self.PORT += 1
                 pass
 
+        # Success run server
         self.server.listen(NUM_CONN)
         self.server.setblocking(False)
         loop = asyncio.get_event_loop()
@@ -217,6 +226,7 @@ class ServerSide(QtWidgets.QDialog):
             client, addr = await loop.sock_accept(self.server)
             self.printlogs(str("Client " + str(addr[0]) + ":" + str(addr[1]) + " Connected at: " + str(datetime.now().strftime("%d/%m/%Y %H:%M:%S")) + "."))
 
+            # Handle client
             try:
                 loop.create_task(self.handle_client(client, addr))
             except:

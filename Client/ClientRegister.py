@@ -31,6 +31,7 @@ class RegUi(QtWidgets.QDialog):
         # Check password
         if (password != repassword):
             # Notify user
+            self.ui.repasswordField.clear()
             self.ui.statusLabel.setText("Mật khẩu nhập không chính xác!")
             return
 
@@ -54,11 +55,24 @@ class RegUi(QtWidgets.QDialog):
             # Can't login
             if (login["avai"] == False and login["success"] == False):
                 self.ui.statusLabel.setText(str("Không thể đăng kí! Vui lòng thử lại sau"))
+            
+            # Username is used before
             elif (not login["avai"]): 
-                # Username is used before
                 self.ui.statusLabel.setText(str("Tên tài khoản đã được sử dụng"))
+                self.ui.usernameField.clear()
+                self.ui.passwordField.clear()
+                self.ui.repasswordField.clear()
+            
+            # Account create successfuly
             else:
                 self.ui.statusLabel.setText(str("Tài khoản: " + username + " được tạo thành công!"))
+                self.ui.usernameField.clear()
+                self.ui.passwordField.clear()
+                self.ui.repasswordField.clear()
+
         except:
             # Notify unexpected error
             self.ui.statusLabel.setText("Lỗi không xác định!")
+            self.ui.usernameField.clear()
+            self.ui.passwordField.clear()
+            self.ui.repasswordField.clear()
