@@ -94,6 +94,7 @@ class ClientUI(QtWidgets.QDialog):
             self.ChangeState(-1)
 
     def disconnect(self):
+        self.logout()
         self.net.close_connection();
         self.ChangeState(-1)
 
@@ -200,4 +201,4 @@ class ClientUI(QtWidgets.QDialog):
 
     # Close UI
     def CloseUI(self):
-        pass
+        self.disconnect()

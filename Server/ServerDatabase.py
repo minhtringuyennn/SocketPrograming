@@ -143,7 +143,7 @@ class Db():
         while True:
             print(f"Updated database at {datetime.now()}")
             self.updateJson(date)
-            time.sleep(3600) # Sleep
+            time.sleep(5) # Sleep 1800s (30 mins)
 
     # Query for login
     def Login(self, username, password):
